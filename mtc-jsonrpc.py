@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf_8 -*-l
 
+# pip3 install Werkzeug json-rpc
 from sys import path
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
@@ -105,6 +106,32 @@ def status():
 #end define
 
 @dispatcher.add_method
+def seqno(walletName):
+	wallet = ton.GetLocalWallet(walletName)
+	seqno = ton.GetSeqno(wallet)
+	return seqno
+#end define
+
+@dispatcher.add_method
+def getconfig(configId):
+	data = ton.GetConfig(configId)
+	return data
+#end define
+
+@dispatcher.add_method
+def nw(walletName, workchain=0):
+	wallet = ton.CreateWallet(walletName, workchain)
+	return wallet.__dict__
+#end define
+
+@dispatcher.add_method
+def aw(walletName):
+	wallet = ton.GetLocalWallet(walletName)
+	ton.ActivateWallet(wallet)
+	return True
+#end define
+
+@dispatcher.add_method
 def wl():
 	data = dict()
 	wallets = ton.GetWallets()
@@ -121,19 +148,80 @@ def wl():
 #end define
 
 @dispatcher.add_method
+def dw(walletName):
+	wallet = ton.GetLocalWallet(walletName)
+	wallet.Delete()
+	return True
+#end define
+
+@dispatcher.add_method
+def vas(addr):
+	account = ton.GetAccount(addr)
+	return account.__dict__
+#end define
+
+@dispatcher.add_method
 def vah(addr, limit):
 	account = ton.GetAccount(addr)
 	history = ton.GetAccountHistory(account, limit)
 	return history
 #end define
 
+@dispatcher.add_method
+def mg(walletName, destination, amount):
+	wallet = ton.GetLocalWallet(walletName)
+	ton.MoveCoins(wallet, destination, amount)
+	return True
+#end define
 
+@dispatcher.add_method
+def ol():
+	offers = ton.GetOffers()
+	return offers
+#end define
 
+@dispatcher.add_method
+def vo(offerHash):
+	ton.VoteOffer(offerHash)
+	return True
+#end define
+
+@dispatcher.add_method
+def el():
+	entries = ton.GetElectionEntries()
+	return entries
+#end define
+
+@dispatcher.add_method
+def ve():
+	ton.ReturnStake()
+	ton.ElectionEntry()
+	return True
+#end define
+
+@dispatcher.add_method
+def vl():
+	validators = ton.GetValidatorsList()
+	return validators
+#end define
+
+@dispatcher.add_method
+def cl():
+	complaints = ton.GetComplaints()
+	return complaints
+#end define
+
+@dispatcher.add_method
+def vc(electionId, complaintHash):
+	ton.VoteComplaint(electionId, complaintHash)
+	return True
+#end define
 
 
 ###
 ### Старт программы
 ###
+
 if __name__ == "__main__":
 	run_simple('localhost', 4000, application)
 #end if
