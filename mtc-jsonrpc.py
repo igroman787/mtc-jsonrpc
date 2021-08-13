@@ -4,13 +4,15 @@
 # pip3 install Werkzeug json-rpc
 from sys import path
 from werkzeug.wrappers import Request, Response
-from werkzeug.serving import run_simple
+from werkzeug.serving import run_simple, make_ssl_devcert
 from jsonrpc import JSONRPCResponseManager, dispatcher
 
 path.append("/usr/src/mytonctrl/")
 from mytoncore import *
 
+local = MyPyClass(__file__)
 ton = MyTonCore()
+
 
 
 @Request.application
@@ -218,12 +220,26 @@ def vc(electionId, complaintHash):
 #end define
 
 
+def Init():
+	ip = requests.get("https://ifconfig.me").text
+	port = 4000
+	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
+	crtPath = sslKeyPath + ".crt"
+	keyPath = sslKeyPath + ".key"
+	if os.path.isfile(keyPath) == False:
+		make_ssl_devcert(sslKeyPath, host=ip)
+	#end if
+	
+	run_simple(ip, port, application, ssl_context=(crtPath, keyPath))
+#end define
+
+
 ###
 ### Старт программы
 ###
 
 if __name__ == "__main__":
-	run_simple('localhost', 4000, application)
+	Init()
 #end if
 
 
