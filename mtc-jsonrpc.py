@@ -4,7 +4,9 @@
 # pip3 install Werkzeug json-rpc
 from sys import path
 from werkzeug.wrappers import Request, Response
+from werkzeug.datastructures import Headers
 from werkzeug.serving import run_simple, make_ssl_devcert
+from werkzeug.security import check_password_hash, generate_password_hash
 from jsonrpc import JSONRPCResponseManager, dispatcher
 
 path.append("/usr/src/mytonctrl/")
@@ -17,9 +19,30 @@ ton = MyTonCore()
 
 @Request.application
 def application(request):
-	response = JSONRPCResponseManager.handle(
-		request.data, dispatcher)
-	return Response(response.json, mimetype="application/json")
+	rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
+	headers = Headers()
+	headers.add("Access-Control-Allow-Origin", '*')
+	response = Response(rpc.json, mimetype="application/json", headers=headers)
+	return response
+#end define
+
+@dispatcher.add_method
+def login(passwd):
+	ip = request.remote_addr
+	passwdHash = ton.GetSettings("passwdHash")
+	passwdHash = generate_password_hash("123") # fix me
+	if check_password_hash(passwdHash, passwd):
+		CorrectPassword(ip)
+	else:
+		WrongPassword(ip)
+#end define
+
+def CorrectPassword(ip):
+	pass
+#end define
+
+def WrongPassword(ip):
+	pass
 #end define
 
 @dispatcher.add_method
