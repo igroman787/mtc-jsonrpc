@@ -2,6 +2,7 @@
 # -*- coding: utf_8 -*-l
 
 # pip3 install Werkzeug json-rpc
+import secrets
 from sys import path
 from werkzeug.wrappers import Request, Response
 from werkzeug.datastructures import Headers
@@ -16,37 +17,113 @@ local = MyPyClass(__file__)
 ton = MyTonCore()
 
 
+class IP:
+	def __init__(self, addr):
+		self.addr = addr
+		self.wrongNumber = 0
+		self.isBlock = False
+		self.token = None
+		self.inputToken = None
+		self.timestamp = None
+		self.lifetime = 2629743 # 1 month
+	#end define
+	
+	def WrongAccess(self):
+		if self.wrongNumber > 5:
+			self.isBlock = True
+		else:
+			self.wrongNumber += 1
+		raise Exception(403, "Forbidden")
+	#end define
+	
+	def GenerateToken(self):
+		self.wrongNumber = 0
+		self.token = secrets.token_urlsafe(32)
+		self.timestamp = self.TS()
+	#end define
+	
+	def CheckAccess(self):
+		if self.isBlock:
+			self.WrongAccess()
+		timestamp = self.TS()
+		isAlive = self.timestamp + self.lifetime > timestamp
+		isCorrectToken = self.token == self.inputToken
+		if isAlive and isCorrectToken:
+			pass
+		else:
+			self.WrongAccess()
+	#end define
+	
+	def CheckPassword(self, passwd):
+		if self.isBlock:
+			self.WrongAccess()
+		passwdHash = ton.GetSettings("passwdHash")
+		# passwdHash = generate_password_hash("123") # fix me
+		if check_password_hash(passwdHash, passwd):
+			self.GenerateToken()
+		else:
+			self.WrongAccess()
+	#end define
+	
+	def TS(self):
+		timestamp = int(time.time())
+		return timestamp
+	#end define
+#end class
+
 
 @Request.application
 def application(request):
+	global ip
+	token = GetUserToken(request)
+	ip = GetIp(request.remote_addr, token)
 	rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
 	headers = Headers()
 	headers.add("Access-Control-Allow-Origin", '*')
+	headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control")
 	response = Response(rpc.json, mimetype="application/json", headers=headers)
 	return response
 #end define
 
+def GetUserToken(request):
+	token = None
+	buffer = request.headers.get("Authorization")
+	if buffer is not None and "token " in buffer:
+		buffer = buffer.split(' ')
+		token = buffer[1]
+	return token
+#end define
+
 @dispatcher.add_method
 def login(passwd):
-	ip = request.remote_addr
-	passwdHash = ton.GetSettings("passwdHash")
-	passwdHash = generate_password_hash("123") # fix me
-	if check_password_hash(passwdHash, passwd):
-		CorrectPassword(ip)
-	else:
-		WrongPassword(ip)
+	global ip
+	ip.CheckPassword(passwd)
+	return ip.token
 #end define
 
-def CorrectPassword(ip):
-	pass
+def GetIp(addr, token):
+	ipList = GetIpList()
+	ip = ipList.get(addr)
+	if ip is None:
+		ip = IP(addr)
+		ipList[addr] = ip
+	ip.inputToken = token
+	return ip
 #end define
 
-def WrongPassword(ip):
-	pass
+def GetIpList():
+	ipList = local.buffer.get("ipList")
+	if ipList is None:
+		ipList = dict()
+		local.buffer["ipList"] = ipList
+	return ipList
 #end define
 
 @dispatcher.add_method
 def status():
+	global ip
+	ip.CheckAccess()
 	config15 = ton.GetConfig15()
 	config17 = ton.GetConfig17()
 	config34 = ton.GetConfig34()
@@ -132,6 +209,8 @@ def status():
 
 @dispatcher.add_method
 def seqno(walletName):
+	global ip
+	ip.CheckAccess()
 	wallet = ton.GetLocalWallet(walletName)
 	seqno = ton.GetSeqno(wallet)
 	return seqno
@@ -139,18 +218,24 @@ def seqno(walletName):
 
 @dispatcher.add_method
 def getconfig(configId):
+	global ip
+	ip.CheckAccess()
 	data = ton.GetConfig(configId)
 	return data
 #end define
 
 @dispatcher.add_method
 def nw(walletName, workchain=0):
+	global ip
+	ip.CheckAccess()
 	wallet = ton.CreateWallet(walletName, workchain)
 	return wallet.__dict__
 #end define
 
 @dispatcher.add_method
 def aw(walletName):
+	global ip
+	ip.CheckAccess()
 	wallet = ton.GetLocalWallet(walletName)
 	ton.ActivateWallet(wallet)
 	return True
@@ -158,6 +243,8 @@ def aw(walletName):
 
 @dispatcher.add_method
 def wl():
+	global ip
+	ip.CheckAccess()
 	data = dict()
 	wallets = ton.GetWallets()
 	for wallet in wallets:
@@ -174,6 +261,8 @@ def wl():
 
 @dispatcher.add_method
 def dw(walletName):
+	global ip
+	ip.CheckAccess()
 	wallet = ton.GetLocalWallet(walletName)
 	wallet.Delete()
 	return True
@@ -181,12 +270,16 @@ def dw(walletName):
 
 @dispatcher.add_method
 def vas(addr):
+	global ip
+	ip.CheckAccess()
 	account = ton.GetAccount(addr)
 	return account.__dict__
 #end define
 
 @dispatcher.add_method
 def vah(addr, limit):
+	global ip
+	ip.CheckAccess()
 	account = ton.GetAccount(addr)
 	history = ton.GetAccountHistory(account, limit)
 	return history
@@ -194,6 +287,8 @@ def vah(addr, limit):
 
 @dispatcher.add_method
 def mg(walletName, destination, amount):
+	global ip
+	ip.CheckAccess()
 	wallet = ton.GetLocalWallet(walletName)
 	ton.MoveCoins(wallet, destination, amount)
 	return True
@@ -201,24 +296,32 @@ def mg(walletName, destination, amount):
 
 @dispatcher.add_method
 def ol():
+	global ip
+	ip.CheckAccess()
 	offers = ton.GetOffers()
 	return offers
 #end define
 
 @dispatcher.add_method
 def vo(offerHash):
+	global ip
+	ip.CheckAccess()
 	ton.VoteOffer(offerHash)
 	return True
 #end define
 
 @dispatcher.add_method
 def el():
+	global ip
+	ip.CheckAccess()
 	entries = ton.GetElectionEntries()
 	return entries
 #end define
 
 @dispatcher.add_method
 def ve():
+	global ip
+	ip.CheckAccess()
 	ton.ReturnStake()
 	ton.ElectionEntry()
 	return True
@@ -226,34 +329,41 @@ def ve():
 
 @dispatcher.add_method
 def vl():
+	global ip
+	ip.CheckAccess()
 	validators = ton.GetValidatorsList()
 	return validators
 #end define
 
 @dispatcher.add_method
 def cl():
+	global ip
+	ip.CheckAccess()
 	complaints = ton.GetComplaints()
 	return complaints
 #end define
 
 @dispatcher.add_method
 def vc(electionId, complaintHash):
+	global ip
+	ip.CheckAccess()
 	ton.VoteComplaint(electionId, complaintHash)
 	return True
 #end define
 
 
 def Init():
-	ip = requests.get("https://ifconfig.me").text
+	addr = requests.get("https://ifconfig.me").text
 	port = 4000
 	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
 	crtPath = sslKeyPath + ".crt"
 	keyPath = sslKeyPath + ".key"
 	if os.path.isfile(keyPath) == False:
-		make_ssl_devcert(sslKeyPath, host=ip)
+		make_ssl_devcert(sslKeyPath, host=addr)
 	#end if
 	
-	run_simple(ip, port, application, ssl_context=(crtPath, keyPath))
+	run_simple(addr, port, application, ssl_context=(crtPath, keyPath))
+	# run_simple(addr, port, application)
 #end define
 
 

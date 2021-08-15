@@ -1,12 +1,18 @@
 import requests
 import json
+import os
 
 
-url = "http://localhost:4000/jsonrpc"
+url = "https://185.86.77.139:4000/"
+token = None
 
 def Get(method, params=None):
+	global token
 	payload = {"method": method, "params": params, "jsonrpc": "2.0", "id": 0}
-	response = requests.post(url, json=payload)
+	headers = None
+	if token is not None:
+		headers = {"Authorization": "token " + token}
+	response = requests.post(url, json=payload, headers=headers, verify=False) # verify='/path/to/public_key.pem'
 	data = response.json()
 	result = data.get("result")
 	error = data.get("error")
@@ -15,6 +21,16 @@ def Get(method, params=None):
 		raise Exception(text)
 	return result
 #end define
+
+
+
+###
+### Старт программы
+###
+
+
+token = Get("login", ["123"])
+print("token", json.dumps(token, indent=4))
 
 data = Get("status")
 print(json.dumps(data, indent=4))
@@ -63,6 +79,9 @@ print("cl", json.dumps(data, indent=4))
 
 # data = Get("vc", [12345678, 1321346545498416587651687435438748645348])
 # print("vc", json.dumps(data, indent=4))
+
+
+
 
 
 
