@@ -27,7 +27,7 @@ class IP:
 		self.timestamp = None
 		self.lifetime = 2629743 # 1 month
 	#end define
-	
+
 	def WrongAccess(self):
 		if self.wrongNumber > 5:
 			self.isBlock = True
@@ -35,36 +35,44 @@ class IP:
 			self.wrongNumber += 1
 		raise Exception(403, "Forbidden")
 	#end define
-	
+
 	def GenerateToken(self):
 		self.wrongNumber = 0
 		self.token = secrets.token_urlsafe(32)
 		self.timestamp = self.TS()
 	#end define
-	
+	def DestroyToken(self):
+		self.wrongNumber = 0
+		self.token = None
+		self.timestamp = None
+	#end define
+
 	def CheckAccess(self):
-		if self.isBlock:
+		print('TOKEN: ' + self.inputToken)
+		if self.isBlock or self.token is None or self.timestamp is None:
 			self.WrongAccess()
 		timestamp = self.TS()
 		isAlive = self.timestamp + self.lifetime > timestamp
 		isCorrectToken = self.token == self.inputToken
+
 		if isAlive and isCorrectToken:
 			pass
 		else:
 			self.WrongAccess()
 	#end define
-	
+
 	def CheckPassword(self, passwd):
 		if self.isBlock:
 			self.WrongAccess()
 		passwdHash = ton.GetSettings("passwdHash")
+
 		# passwdHash = generate_password_hash("123") # fix me
-		if check_password_hash(passwdHash, passwd):
+		if passwdHash and check_password_hash(passwdHash, passwd):
 			self.GenerateToken()
 		else:
 			self.WrongAccess()
 	#end define
-	
+
 	def TS(self):
 		timestamp = int(time.time())
 		return timestamp
@@ -76,12 +84,13 @@ class IP:
 def application(request):
 	global ip
 	token = GetUserToken(request)
+
 	ip = GetIp(request.remote_addr, token)
 	rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
 	headers = Headers()
 	headers.add("Access-Control-Allow-Origin", '*')
 	headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-	headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control")
+	headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
 	response = Response(rpc.json, mimetype="application/json", headers=headers)
 	return response
 #end define
@@ -96,11 +105,19 @@ def GetUserToken(request):
 #end define
 
 @dispatcher.add_method
-def login(passwd):
+def login(api, passwd):
 	global ip
 	ip.CheckPassword(passwd)
-	return ip.token
+	return {"api": api, "token": ip.token}
 #end define
+
+@dispatcher.add_method
+def logout():
+	global ip
+	ip.DestroyToken()
+	return 1;
+#end define
+
 
 def GetIp(addr, token):
 	ipList = GetIpList()
@@ -183,8 +200,9 @@ def status():
 	data["validatorIndex"] = validatorIndex
 	data["validatorEfficiency"] = validatorEfficiency
 	data["adnlAddr"] = adnlAddr
-	data["validatorWalletAddr"] = validatorWallet.addr
-	data["validatorWalletBalance"] = validatorAccount.balance
+	if validatorWallet is not None:
+		data["validatorWalletAddr"] = validatorWallet.addr
+		data["validatorWalletBalance"] = validatorAccount.balance
 	data["loadavg"] = loadavg
 	data["netLoadAvg"] = netLoadAvg
 	data["mytoncoreStatus"] = mytoncoreStatus
@@ -352,6 +370,7 @@ def vc(electionId, complaintHash):
 #end define
 
 
+
 def Init():
 	addr = requests.get("https://ifconfig.me").text
 	port = 4000
@@ -361,8 +380,8 @@ def Init():
 	if os.path.isfile(keyPath) == False:
 		make_ssl_devcert(sslKeyPath, host=addr)
 	#end if
-	
-	run_simple(addr, port, application, ssl_context=(crtPath, keyPath))
+
+	run_simple(addr, port, application)
 	# run_simple(addr, port, application)
 #end define
 
@@ -374,5 +393,3 @@ def Init():
 if __name__ == "__main__":
 	Init()
 #end if
-
-
