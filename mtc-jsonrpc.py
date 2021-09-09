@@ -179,6 +179,11 @@ def status():
 		validatorAccount = ton.GetAccount(validatorWallet.addr)
 	else:
 		validatorAccount = None
+	#end if
+	
+	if startWorkTime == 0:
+		startWorkTime = oldStartWorkTime
+	#end if
 
 	# Calculate time
 	startValidation = startWorkTime
