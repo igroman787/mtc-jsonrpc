@@ -41,6 +41,7 @@ class IP:
 		self.token = secrets.token_urlsafe(32)
 		self.timestamp = self.TS()
 	#end define
+	
 	def DestroyToken(self):
 		self.wrongNumber = 0
 		self.token = None
@@ -66,7 +67,6 @@ class IP:
 			self.WrongAccess()
 		passwdHash = ton.GetSettings("passwdHash")
 
-		# passwdHash = generate_password_hash("123") # fix me
 		if passwdHash and check_password_hash(passwdHash, passwd):
 			self.GenerateToken()
 		else:
@@ -374,9 +374,37 @@ def vc(electionId, complaintHash):
 	return True
 #end define
 
+@dispatcher.add_method
+def get(name):
+	global ip
+	ip.CheckAccess()
+	result = ton.GetSettings(name)
+	return result
+#end define
 
+@dispatcher.add_method
+def set(name, value):
+	global ip
+	ip.CheckAccess()
+	ton.SetSettings(name, value)
+	return True
+#end define
+
+def SetWebPassword():
+	local.AddLog("start SetWebPassword function", "debug")
+	passwd = input("Set a new password for the web admin panel: ")
+	passwdHash = generate_password_hash(passwd)
+	ton.SetSettings("passwdHash", passwdHash)
+	print("New password:", passwd)
+#end define
 
 def Init():
+	# Event reaction
+	if ("-p" in sys.argv):
+		SetWebPassword()
+		return
+	#end if
+	
 	addr = requests.get("https://ifconfig.me").text
 	port = 4000
 	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
@@ -387,7 +415,6 @@ def Init():
 	#end if
 
 	run_simple(addr, port, application)
-	# run_simple(addr, port, application)
 #end define
 
 
