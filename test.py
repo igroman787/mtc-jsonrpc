@@ -3,7 +3,7 @@ import json
 import os
 
 
-url = "https://185.86.77.139:4000/"
+url = "http://185.86.77.139:4000/"
 token = None
 
 def Get(method, params=None):
@@ -29,11 +29,19 @@ def Get(method, params=None):
 ###
 
 
-token = Get("login", ["123"])
+buff = Get("login", [None, "123"])
+token = buff.get("token")
 print("token", json.dumps(token, indent=4))
 
+
+while True:
+	time.sleep(1)
+	data = Get("wl")
+	print("wl", json.dumps(data, indent=4))
+#end while
+
 data = Get("status")
-print(json.dumps(data, indent=4))
+print("status",json.dumps(data, indent=4))
 
 data = Get("seqno", ["validator_wallet_001"])
 print("seqno", json.dumps(data, indent=4))
@@ -53,10 +61,10 @@ print("wl", json.dumps(data, indent=4))
 # data = Get("dw", ["wallet_001"])
 # print(json.dumps(data, indent=4))
 
-data = Get("vas", ["kf_COrB2c9Sm41aVhq54CotaTZJ55_3iDApuMkrBmGRiJ8_P"])
+data = Get("vas", ["Ef_dJMSh8riPi3BTUTtcxsWjG8RLKnLctNjAM4rw8NN-xWdr"])
 print("vas", json.dumps(data, indent=4))
 
-data = Get("vah", ["kf_COrB2c9Sm41aVhq54CotaTZJ55_3iDApuMkrBmGRiJ8_P", 10])
+data = Get("vah", ["Ef_dJMSh8riPi3BTUTtcxsWjG8RLKnLctNjAM4rw8NN-xWdr", 100])
 print("vah", json.dumps(data, indent=4))
 
 data = Get("ol")

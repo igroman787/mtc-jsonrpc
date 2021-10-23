@@ -283,15 +283,6 @@ def wl():
 #end define
 
 @dispatcher.add_method
-def dw(walletName):
-	global ip
-	ip.CheckAccess()
-	wallet = ton.GetLocalWallet(walletName)
-	wallet.Delete()
-	return True
-#end define
-
-@dispatcher.add_method
 def vas(addr):
 	global ip
 	ip.CheckAccess()
@@ -306,15 +297,6 @@ def vah(addr, limit):
 	account = ton.GetAccount(addr)
 	history = ton.GetAccountHistory(account, limit)
 	return history
-#end define
-
-@dispatcher.add_method
-def mg(walletName, destination, amount):
-	global ip
-	ip.CheckAccess()
-	wallet = ton.GetLocalWallet(walletName)
-	ton.MoveCoins(wallet, destination, amount)
-	return True
 #end define
 
 @dispatcher.add_method
