@@ -306,14 +306,6 @@ def ol():
 	return offers
 #end define
 
-'''@dispatcher.add_method
-def vo(offerHash):
-	global ip
-	ip.CheckAccess()
-	ton.VoteOffer(offerHash)
-	return True
-#end define'''
-
 @dispatcher.add_method
 def el():
 	global ip
@@ -347,14 +339,6 @@ def cl():
 	return complaints
 #end define
 
-'''@dispatcher.add_method
-def vc(electionId, complaintHash):
-	global ip
-	ip.CheckAccess()
-	ton.VoteComplaint(electionId, complaintHash)
-	return True
-#end define'''
-
 @dispatcher.add_method
 def get(name):
 	global ip
@@ -362,14 +346,6 @@ def get(name):
 	result = ton.GetSettings(name)
 	return result
 #end define
-
-'''@dispatcher.add_method
-def set(name, value):
-	global ip
-	ip.CheckAccess()
-	ton.SetSettings(name, value)
-	return True
-#end define'''
 
 def SetWebPassword():
 	local.AddLog("start SetWebPassword function", "debug")
