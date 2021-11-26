@@ -18,7 +18,7 @@ Run the script:
 The script will ask for a  **password** to access the api. This password you will use to access through TonAdmin. If in the future you want to change the password, run the script with the flag **-p**.
 ` python3 mtc-jsonrpc.py -p`
 
-By default, the script runs on port **4000**. You can also change it to the desired one using the **--port** flag.
+By default, the script runs on port **4000**. You can also change it to the desired one using the **-port** flag.
 
 ` python3 mtc-jsonrpc.py -port 3228`
 
