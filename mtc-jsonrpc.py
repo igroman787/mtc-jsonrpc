@@ -41,7 +41,7 @@ class IP:
 		self.token = secrets.token_urlsafe(32)
 		self.timestamp = self.TS()
 	#end define
-	
+
 	def DestroyToken(self):
 		self.wrongNumber = 0
 		self.token = None
@@ -49,7 +49,6 @@ class IP:
 	#end define
 
 	def CheckAccess(self):
-		print('TOKEN: ' + self.inputToken)
 		if self.isBlock or self.token is None or self.timestamp is None:
 			self.WrongAccess()
 		timestamp = self.TS()
@@ -63,8 +62,8 @@ class IP:
 	#end define
 
 	def CheckPassword(self, passwd):
-		if self.isBlock:
-			self.WrongAccess()
+	#	if self.isBlock:
+		#	self.WrongAccess()
 		passwdHash = ton.GetSettings("passwdHash")
 
 		if passwdHash and check_password_hash(passwdHash, passwd):
@@ -180,7 +179,7 @@ def status():
 	else:
 		validatorAccount = None
 	#end if
-	
+
 	if startWorkTime == 0:
 		startWorkTime = oldStartWorkTime
 	#end if
@@ -307,13 +306,13 @@ def ol():
 	return offers
 #end define
 
-@dispatcher.add_method
+'''@dispatcher.add_method
 def vo(offerHash):
 	global ip
 	ip.CheckAccess()
 	ton.VoteOffer(offerHash)
 	return True
-#end define
+#end define'''
 
 @dispatcher.add_method
 def el():
@@ -348,13 +347,13 @@ def cl():
 	return complaints
 #end define
 
-@dispatcher.add_method
+'''@dispatcher.add_method
 def vc(electionId, complaintHash):
 	global ip
 	ip.CheckAccess()
 	ton.VoteComplaint(electionId, complaintHash)
 	return True
-#end define
+#end define'''
 
 @dispatcher.add_method
 def get(name):
@@ -364,13 +363,13 @@ def get(name):
 	return result
 #end define
 
-@dispatcher.add_method
+'''@dispatcher.add_method
 def set(name, value):
 	global ip
 	ip.CheckAccess()
 	ton.SetSettings(name, value)
 	return True
-#end define
+#end define'''
 
 def SetWebPassword():
 	local.AddLog("start SetWebPassword function", "debug")
@@ -386,9 +385,18 @@ def Init():
 		SetWebPassword()
 		return
 	#end if
-	
-	addr = requests.get("https://ifconfig.me").text
+	if not ton.GetSettings("passwdHash"):
+		SetWebPassword()
+		return
+
 	port = 4000
+	# Event reaction
+	if ("-port" in sys.argv):
+		port = int(sys.argv[2])
+	#end if
+
+	addr = requests.get("https://ifconfig.me").text
+
 	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
 	crtPath = sslKeyPath + ".crt"
 	keyPath = sslKeyPath + ".key"
