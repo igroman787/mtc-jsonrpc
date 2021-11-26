@@ -371,7 +371,7 @@ def Init():
 		port = int(sys.argv[2])
 	#end if
 
-	addr = requests.get("https://ifconfig.me").text
+	ip = requests.get("https://ifconfig.me").text
 
 	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
 	crtPath = sslKeyPath + ".crt"
@@ -379,7 +379,7 @@ def Init():
 	if os.path.isfile(keyPath) == False:
 		make_ssl_devcert(sslKeyPath, host=addr)
 	#end if
-	
+
 	run_simple(ip, port, application, ssl_context=(crtPath, keyPath))
 #end define
 
