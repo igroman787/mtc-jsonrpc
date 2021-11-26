@@ -379,8 +379,8 @@ def Init():
 	if os.path.isfile(keyPath) == False:
 		make_ssl_devcert(sslKeyPath, host=addr)
 	#end if
-
-	run_simple(addr, port, application)
+	
+	run_simple(ip, port, application, ssl_context=(crtPath, keyPath))
 #end define
 
 
