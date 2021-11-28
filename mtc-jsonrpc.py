@@ -2,7 +2,9 @@
 # -*- coding: utf_8 -*-l
 
 # pip3 install Werkzeug json-rpc
+import random
 import secrets
+import getpass
 from sys import path
 from werkzeug.wrappers import Request, Response
 from werkzeug.datastructures import Headers
@@ -347,12 +349,32 @@ def get(name):
 	return result
 #end define
 
+def GetPort():
+	port = ton.GetSettings("jsonrpcPort")
+	if port is None:
+		port = random.randint(2000, 65000)
+		ton.SetSettings("jsonrpcPort", port)
+	return port
+#end define
+
 def SetWebPassword():
 	local.AddLog("start SetWebPassword function", "debug")
-	passwd = input("Set a new password for the web admin panel: ")
+	port = GetPort()
+	ip = requests.get("https://ifconfig.me").text
+	url = "https://{ip}:{port}/".format(ip=ip, port=port)
+	passwd = getpass.getpass("Set a new password for the web admin panel: ")
+	repasswd = getpass.getpass("Repeat password: ")
+	if passwd != repasswd:
+		print("Error: Password mismatch")
+		return
 	passwdHash = generate_password_hash(passwd)
 	ton.SetSettings("passwdHash", passwdHash)
-	print("New password:", passwd)
+	print("Configuration complete.")
+	print("Now you can go to https://tonadmin.org")
+	print("and use the following data:")
+	print("--------------------------------------")
+	print("Validator URL:", url)
+	print("--------------------------------------")
 #end define
 
 def Init():
@@ -361,11 +383,13 @@ def Init():
 		SetWebPassword()
 		return
 	#end if
+	
 	if not ton.GetSettings("passwdHash"):
 		SetWebPassword()
 		return
-
-	port = 4000
+	#end if
+	
+	port = GetPort()
 	# Event reaction
 	if ("-port" in sys.argv):
 		port = int(sys.argv[2])
