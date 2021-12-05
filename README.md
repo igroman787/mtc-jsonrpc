@@ -5,10 +5,10 @@ It's a JSONRPC api that connects to MyTonCtrl.
 Before installation your must be sure that you have **[MyTonCtrl](https://github.com/igroman787/mytonctrl)**. JSONRPC api accepts commands from TonAdmin and executes them in MyTonCtrl. In this version only **readonly** interface is implemented for early testing of the admin panel.
 
 # Installation
-1. Install `mtc-jsonrpc` module:
+Install `mtc-jsonrpc` module:
 `mytonctrl` -> `installer` -> `enable JR`
 
-2. Set password:
+Set password:
 `mytonctrl` -> `installer` -> `setwebpass`
 
 # Another installation
