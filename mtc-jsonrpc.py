@@ -395,7 +395,8 @@ def Init():
 		port = int(sys.argv[2])
 	#end if
 
-	ip = requests.get("https://ifconfig.me").text
+	#ip = requests.get("https://ifconfig.me").text
+	ip = "0.0.0.0"
 
 	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
 	crtPath = sslKeyPath + ".crt"
