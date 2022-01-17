@@ -359,6 +359,42 @@ def CheckUpdates():
 	return result
 #end define
 
+@dispatcher.add_method
+def CheckUpdates():
+	gitPath1 = "/usr/src/mytonctrl/"
+	gitPath2 = "/usr/src/mtc-jsonrpc/"
+	result1 = CheckGitUpdate(gitPath1)
+	result2 = CheckGitUpdate(gitPath2)
+	result = [result1, result2]
+	return result
+#end define
+
+def UpdateMtc(args):
+	runArgs = ["bash", "/usr/src/mytonctrl/scripts/update.sh"]
+	runArgs = SetArgsByArgs(runArgs, args)
+
+	exitCode = RunAsRoot(runArgs)
+	if exitCode == 0:
+		text = "Update - {green}OK{endc}"
+	else:
+		text = "Update - {red}Error{endc}"
+	return text;
+	local.Exit()
+#end define
+
+def UpdateJR(args):
+	runArgs = ["bash", "/usr/src/mtc-jsonrpc/update.sh"]
+	runArgs = SetArgsByArgs(runArgs, args)
+
+	exitCode = RunAsRoot(runArgs)
+	if exitCode == 0:
+		text = "Update - {green}OK{endc}"
+	else:
+		text = "Update - {red}Error{endc}"
+	return text;
+	local.Exit()
+#end define
+
 def GetPort():
 	port = ton.GetSettings("jsonrpcPort")
 	if port is None:
@@ -393,12 +429,12 @@ def Init():
 		SetWebPassword()
 		return
 	#end if
-	
+
 	if not ton.GetSettings("passwdHash"):
 		SetWebPassword()
 		return
 	#end if
-	
+
 	port = GetPort()
 	# Event reaction
 	if ("-port" in sys.argv):
