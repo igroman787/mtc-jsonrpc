@@ -3,7 +3,7 @@ import json
 import os
 
 
-url = "http://185.86.77.139:4000/"
+url = "https://185.86.77.139:42420/"
 token = None
 
 def Get(method, params=None):
@@ -32,13 +32,6 @@ def Get(method, params=None):
 buff = Get("login", [None, "123"])
 token = buff.get("token")
 print("token", json.dumps(token, indent=4))
-
-
-while True:
-	time.sleep(1)
-	data = Get("wl")
-	print("wl", json.dumps(data, indent=4))
-#end while
 
 data = Get("status")
 print("status",json.dumps(data, indent=4))
@@ -87,6 +80,9 @@ print("cl", json.dumps(data, indent=4))
 
 # data = Get("vc", [12345678, 1321346545498416587651687435438748645348])
 # print("vc", json.dumps(data, indent=4))
+
+data = Get("CheckUpdates")
+print("CheckUpdates", json.dumps(data, indent=4))
 
 
 

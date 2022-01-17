@@ -349,6 +349,16 @@ def get(name):
 	return result
 #end define
 
+@dispatcher.add_method
+def CheckUpdates():
+	gitPath1 = "/usr/src/mytonctrl/"
+	gitPath2 = "/usr/src/mtc-jsonrpc/"
+	result1 = CheckGitUpdate(gitPath1)
+	result2 = CheckGitUpdate(gitPath2)
+	result = [result1, result2]
+	return result
+#end define
+
 def GetPort():
 	port = ton.GetSettings("jsonrpcPort")
 	if port is None:
