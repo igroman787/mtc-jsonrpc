@@ -349,15 +349,6 @@ def get(name):
 	return result
 #end define
 
-@dispatcher.add_method
-def CheckUpdates():
-	gitPath1 = "/usr/src/mytonctrl/"
-	gitPath2 = "/usr/src/mtc-jsonrpc/"
-	result1 = CheckGitUpdate(gitPath1)
-	result2 = CheckGitUpdate(gitPath2)
-	result = [result1, result2]
-	return result
-#end define
 
 @dispatcher.add_method
 def CheckUpdates():
@@ -370,6 +361,8 @@ def CheckUpdates():
 #end define
 
 def UpdateMtc(args):
+	global ip
+	ip.CheckAccess()
 	runArgs = ["bash", "/usr/src/mytonctrl/scripts/update.sh"]
 	runArgs = SetArgsByArgs(runArgs, args)
 
@@ -383,6 +376,8 @@ def UpdateMtc(args):
 #end define
 
 def UpdateJR(args):
+	global ip
+	ip.CheckAccess()
 	runArgs = ["bash", "/usr/src/mtc-jsonrpc/update.sh"]
 	runArgs = SetArgsByArgs(runArgs, args)
 
