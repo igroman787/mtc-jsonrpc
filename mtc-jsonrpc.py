@@ -377,7 +377,7 @@ def CheckUpdates():
 	result = [result1, result2]
 	return result
 #end define
-
+'''
 @dispatcher.add_method
 def UpdateMtc(args):
 	global ip
@@ -408,7 +408,7 @@ def UpdateJR(args):
 	return text;
 	local.Exit()
 #end define
-
+'''
 def GetPort():
 	port = ton.GetSettings("jsonrpcPort")
 	if port is None:
