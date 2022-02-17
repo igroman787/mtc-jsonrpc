@@ -243,6 +243,7 @@ def getSystemLoad():
 	data["cpu_freq"] = psutil.cpu_freq()
 	data["cpu_load"] = psutil.cpu_percent(interval=1)
 	data["cpu_average"] = psutil.getloadavg()
+	statistics = ton.GetSettings("statistics")
 	data["disksLoadAvg"] = ton.GetStatistics("disksLoadAvg", statistics)
 	data["disksLoadPercentAvg"] = ton.GetStatistics("disksLoadPercentAvg", statistics)
 	return data
