@@ -174,7 +174,7 @@ def status():
 	validatorIndex = ton.GetValidatorIndex()
 	validatorEfficiency = ton.GetValidatorEfficiency()
 	validatorWallet = ton.GetLocalWallet(ton.validatorWalletName)
-	dbSize = ton.GetDbSize()
+
 	offersNumber = ton.GetOffersNumber()
 	complaintsNumber = ton.GetComplaintsNumber()
 	if validatorWallet is not None:
@@ -213,8 +213,7 @@ def status():
 	data["loadavg"] = loadavg
 	data["netLoadAvg"] = netLoadAvg
 	data["mytoncoreStatus"] = mytoncoreStatus
-	data["dbSize"] = dbSize
-	data["diskSpace"] = psutil.disk_usage('/')
+
 
 	data["fullConfigAddr"] = fullConfigAddr
 	data["fullElectorAddr"] = fullElectorAddr
@@ -230,6 +229,22 @@ def status():
 	data["startElection"] = startElection
 	data["endElection"] = endElection
 	data["startNextElection"] = startNextElection
+	return data
+#end define
+
+@dispatcher.add_method
+def getSystemLoad():
+	global ip
+	ip.CheckAccess()
+	data = dict()
+	data["diskSpace"] = psutil.disk_usage('/')
+	data["temp"] = psutil.sensors_temperatures()
+	data["memory"] = psutil.virtual_memory()
+	data["cpu_freq"] = psutil.cpu_freq()
+	data["cpu_load"] = psutil.cpu_percent(interval=1)
+	data["cpu_average"] = psutil.getloadavg()
+	data["disksLoadAvg"] = ton.GetStatistics("disksLoadAvg", statistics)
+	data["disksLoadPercentAvg"] = ton.GetStatistics("disksLoadPercentAvg", statistics)
 	return data
 #end define
 
