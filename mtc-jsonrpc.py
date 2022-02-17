@@ -265,7 +265,7 @@ def getconfig(configId):
 	data = ton.GetConfig(configId)
 	return data
 #end define
-
+'''
 @dispatcher.add_method
 def nw(walletName, workchain=0):
 	global ip
@@ -282,7 +282,7 @@ def aw(walletName):
 	ton.ActivateWallet(wallet)
 	return True
 #end define
-
+'''
 @dispatcher.add_method
 def wl():
 	global ip
