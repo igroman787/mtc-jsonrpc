@@ -272,7 +272,7 @@ def getconfig(configId):
 	data = ton.GetConfig(configId)
 	return data
 #end define
-
+'''
 @dispatcher.add_method
 def nw(walletName, workchain=0):
 	global ip
@@ -289,7 +289,7 @@ def aw(walletName):
 	ton.ActivateWallet(wallet)
 	return True
 #end define
-
+'''
 @dispatcher.add_method
 def wl():
 	global ip
@@ -384,7 +384,7 @@ def CheckUpdates():
 	result = [result1, result2]
 	return result
 #end define
-
+'''
 @dispatcher.add_method
 def UpdateMtc(args):
 	global ip
@@ -415,7 +415,7 @@ def UpdateJR(args):
 	return text;
 	local.Exit()
 #end define
-
+'''
 def GetPort():
 	port = ton.GetSettings("jsonrpcPort")
 	if port is None:
