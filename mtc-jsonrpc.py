@@ -6,6 +6,8 @@ import random
 import secrets
 import getpass
 import psutil
+import json
+import cloudscraper
 from sys import path
 from werkzeug.wrappers import Request, Response
 from werkzeug.datastructures import Headers
@@ -18,7 +20,10 @@ from mytoncore import *
 
 local = MyPyClass(__file__)
 ton = MyTonCore()
-
+scraper = cloudscraper.create_scraper()
+r = scraper.get("https://tonadmin.org/ip.json").text
+data_json = json.loads(r)
+allowedIP = data_json[0]
 
 class IP:
 	def __init__(self, addr):
@@ -32,10 +37,6 @@ class IP:
 	#end define
 
 	def WrongAccess(self):
-		if self.wrongNumber > 5:
-			self.isBlock = True
-		else:
-			self.wrongNumber += 1
 		raise Exception(403, "Forbidden")
 	#end define
 
@@ -57,7 +58,8 @@ class IP:
 		timestamp = self.TS()
 		isAlive = self.timestamp + self.lifetime > timestamp
 		isCorrectToken = self.token == self.inputToken
-
+		print(isCorrectToken)
+		print(isAlive)
 		if isAlive and isCorrectToken:
 			pass
 		else:
@@ -86,15 +88,17 @@ class IP:
 def application(request):
 	global ip
 	token = GetUserToken(request)
-
 	ip = GetIp(request.remote_addr, token)
-	rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
-	headers = Headers()
-	headers.add("Access-Control-Allow-Origin", '*')
-	headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-	headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
-	response = Response(rpc.json, mimetype="application/json", headers=headers)
-	return response
+	if allowedIP == request.remote_addr:
+		rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
+		headers = Headers()
+		headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
+		headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
+		response = Response(rpc.json, mimetype="application/json", headers=headers)
+		return response
+	else:
+		raise Exception(403, "Forbidden")
 #end define
 
 def GetUserToken(request):
@@ -137,6 +141,8 @@ def GetIpList():
 		ipList = dict()
 		local.buffer["ipList"] = ipList
 	return ipList
+#end define
+
 #end define
 
 @dispatcher.add_method
@@ -235,6 +241,7 @@ def status():
 @dispatcher.add_method
 def getSystemLoad():
 	global ip
+	print(ip)
 	ip.CheckAccess()
 	data = dict()
 	data["diskSpace"] = psutil.disk_usage('/')
@@ -265,7 +272,7 @@ def getconfig(configId):
 	data = ton.GetConfig(configId)
 	return data
 #end define
-'''
+
 @dispatcher.add_method
 def nw(walletName, workchain=0):
 	global ip
@@ -282,7 +289,7 @@ def aw(walletName):
 	ton.ActivateWallet(wallet)
 	return True
 #end define
-'''
+
 @dispatcher.add_method
 def wl():
 	global ip
@@ -377,7 +384,7 @@ def CheckUpdates():
 	result = [result1, result2]
 	return result
 #end define
-'''
+
 @dispatcher.add_method
 def UpdateMtc(args):
 	global ip
@@ -408,7 +415,7 @@ def UpdateJR(args):
 	return text;
 	local.Exit()
 #end define
-'''
+
 def GetPort():
 	port = ton.GetSettings("jsonrpcPort")
 	if port is None:

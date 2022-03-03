@@ -2,7 +2,7 @@
 
 This module is designed to enable MyTonCtrl and TonAdmin to work together.
 It's a JSONRPC api that connects to MyTonCtrl.
-Before installation your must be sure that you have **[MyTonCtrl](https://github.com/igroman787/mytonctrl)**. JSONRPC api accepts commands from TonAdmin and executes them in MyTonCtrl. In this version only **readonly** interface is implemented for early testing of the admin panel.
+Before installation your must be sure that you have **[MyTonCtrl](https://github.com/ton-blockchain/mytonctrl)**. JSONRPC api accepts commands from TonAdmin and executes them in MyTonCtrl. In this version only **readonly** interface is implemented for early testing of the admin panel.
 
 # Installation
 Install `mtc-jsonrpc` module:
@@ -14,7 +14,7 @@ Set password:
 # Another installation
 Clone  repository:
 
-` git clone --recursive https://github.com/igroman787/mtc-jsonrpc.git`
+` git clone --recursive https://github.com/ton-blockchain/mtc-jsonrpc.git`
 
 Be shure that you have python3. if you have MyTonCtrl - you have it.
 Run the script:
