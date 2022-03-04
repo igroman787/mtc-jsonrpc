@@ -14,6 +14,7 @@ from werkzeug.datastructures import Headers
 from werkzeug.serving import run_simple, make_ssl_devcert
 from werkzeug.security import check_password_hash, generate_password_hash
 from jsonrpc import JSONRPCResponseManager, dispatcher
+from jsonrpc.exceptions import JSONRPCDispatchException
 
 path.append("/usr/src/mytonctrl/")
 from mytoncore import *
@@ -37,7 +38,7 @@ class IP:
 	#end define
 
 	def WrongAccess(self):
-		raise Exception(403, "Forbidden")
+		raise JSONRPCDispatchException(403, "Forbidden")
 	#end define
 
 	def GenerateToken(self):
@@ -91,14 +92,18 @@ def application(request):
 	ip = GetIp(request.remote_addr, token)
 	if allowedIP == request.remote_addr:
 		rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
-		headers = Headers()
-		headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
-		headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
-		response = Response(rpc.json, mimetype="application/json", headers=headers)
-		return response
+		data = rpc.json
 	else:
-		raise Exception(403, "Forbidden")
+		data = {"error": {"code": 403, "message": "Forbidden"}, "id": 0, "jsonrpc": "2.0"}
+		data = json.dumps(data)
+	#end if
+	
+	headers = Headers()
+	headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
+	headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
+	response = Response(data, mimetype="application/json", headers=headers)
+	return response
 #end define
 
 def GetUserToken(request):
