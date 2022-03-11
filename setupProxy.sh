@@ -27,8 +27,8 @@ server {
         listen $port ssl;
         listen [::]:$port ssl;
 
-        ssl_certificate /usr/local/bin/mtc-jsonrpc/ssl.crt;
-        ssl_certificate_key /usr/local/bin/mtc-jsonrpc/ssl.key;
+        ssl_certificate ~/.local/share/mtc-jsonrpc/ssl.crt;
+        ssl_certificate_key ~/.local/share/mtc-jsonrpc/ssl.key;
 
         allow $ip;
         deny all;
