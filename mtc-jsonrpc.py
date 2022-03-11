@@ -103,7 +103,6 @@ def application(request):
 		rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
 		data = rpc.json
 	else:
-<<<<<<< HEAD
 		scraper = cloudscraper.create_scraper()
 		r = scraper.get("https://tonadmin.org/ip.json").text
 		data_json = json.loads(r)
@@ -113,12 +112,6 @@ def application(request):
 		data = json.dumps(data)
 	#end if
 
-=======
-		data = {"error": {"code": 403, "message": "Forbidden"}, "id": 0, "jsonrpc": "2.0"}
-		data = json.dumps(data)
-	#end if
-	
->>>>>>> 26d7a76253ecbcc9401000a61933bbf3ba2c459d
 	headers = Headers()
 	headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
 	headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
@@ -148,7 +141,7 @@ def login(api, passwd, code = None):
 			raise JSONRPCDispatchException(403, "Wrong 2fa code")
 	return {"api": api, "token": ip.token}
 #end define
-
+ 
 @dispatcher.add_method
 def logout():
 	global ip
