@@ -8,22 +8,20 @@ import getpass
 import psutil
 import json
 import cloudscraper
+import pyotp
 from sys import path
 from werkzeug.wrappers import Request, Response
 from werkzeug.datastructures import Headers
 from werkzeug.serving import run_simple, make_ssl_devcert
 from werkzeug.security import check_password_hash, generate_password_hash
 from jsonrpc import JSONRPCResponseManager, dispatcher
+from jsonrpc.exceptions import JSONRPCDispatchException
 
 path.append("/usr/src/mytonctrl/")
 from mytoncore import *
 
 local = MyPyClass(__file__)
 ton = MyTonCore()
-scraper = cloudscraper.create_scraper()
-r = scraper.get("https://tonadmin.org/ip.json").text
-data_json = json.loads(r)
-allowedIP = data_json[0]
 
 class IP:
 	def __init__(self, addr):
@@ -34,10 +32,12 @@ class IP:
 		self.inputToken = None
 		self.timestamp = None
 		self.lifetime = 2629743 # 1 month
+		self.allowedIP = None
+		self.SetAllowedIP()
 	#end define
 
 	def WrongAccess(self):
-		raise Exception(403, "Forbidden")
+		raise JSONRPCDispatchException(403, "Forbidden")
 	#end define
 
 	def GenerateToken(self):
@@ -58,8 +58,6 @@ class IP:
 		timestamp = self.TS()
 		isAlive = self.timestamp + self.lifetime > timestamp
 		isCorrectToken = self.token == self.inputToken
-		print(isCorrectToken)
-		print(isAlive)
 		if isAlive and isCorrectToken:
 			pass
 		else:
@@ -74,12 +72,23 @@ class IP:
 		if passwdHash and check_password_hash(passwdHash, passwd):
 			self.GenerateToken()
 		else:
-			self.WrongAccess()
+			raise JSONRPCDispatchException(403, "Wrong login or password")
 	#end define
 
 	def TS(self):
 		timestamp = int(time.time())
 		return timestamp
+	#end define
+
+	def SetAllowedIP(self):
+		scraper = cloudscraper.create_scraper()
+		r = scraper.get("https://tonadmin.org/ip.json").text
+		data_json = json.loads(r)
+		self.allowedIP = data_json[0]
+	#end define
+
+	def GetAllowedIP(self):
+		return self.allowedIP
 	#end define
 #end class
 
@@ -89,16 +98,26 @@ def application(request):
 	global ip
 	token = GetUserToken(request)
 	ip = GetIp(request.remote_addr, token)
-	if allowedIP == request.remote_addr:
+
+	if ip.GetAllowedIP() == request.headers['X-Real-Ip']:
 		rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
-		headers = Headers()
-		headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
-		headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
-		response = Response(rpc.json, mimetype="application/json", headers=headers)
-		return response
+		data = rpc.json
 	else:
-		raise Exception(403, "Forbidden")
+		scraper = cloudscraper.create_scraper()
+		r = scraper.get("https://tonadmin.org/ip.json").text
+		data_json = json.loads(r)
+		if data_json[0] != ip.GetAllowedIP():
+			ip.SetAllowedIP()
+		data = {"error": {"code": 403, "message": "Forbidden"}, "id": 0, "jsonrpc": "2.0"}
+		data = json.dumps(data)
+	#end if
+
+	headers = Headers()
+	headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
+	headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	headers.add("Access-Control-Allow-Headers", "Content-Length,Content-Type,x-compress,Cache-Control,Authorization")
+	response = Response(data, mimetype="application/json", headers=headers)
+	return response
 #end define
 
 def GetUserToken(request):
@@ -111,9 +130,15 @@ def GetUserToken(request):
 #end define
 
 @dispatcher.add_method
-def login(api, passwd):
+def login(api, passwd, code = None):
 	global ip
 	ip.CheckPassword(passwd)
+	if ton.GetSettings("jsonrpcOTP"):
+		OTPSecret = ton.GetSettings("jsonrpcOTPSecret")
+		totp = pyotp.TOTP(OTPSecret)
+		if totp.now() != code:
+			print('exception')
+			raise JSONRPCDispatchException(403, "Wrong 2fa code")
 	return {"api": api, "token": ip.token}
 #end define
 
@@ -241,7 +266,6 @@ def status():
 @dispatcher.add_method
 def getSystemLoad():
 	global ip
-	print(ip)
 	ip.CheckAccess()
 	data = dict()
 	data["diskSpace"] = psutil.disk_usage('/')
@@ -416,6 +440,47 @@ def UpdateJR(args):
 	local.Exit()
 #end define
 '''
+
+@dispatcher.add_method
+def GetOTPStatus():
+	global ip
+	ip.CheckAccess()
+	return ton.GetSettings("jsonrpcOTP")
+#end define
+
+@dispatcher.add_method
+def SetupOTP():
+	global ip
+	ip.CheckAccess()
+	local.AddLog("start SetupOTP function", "debug")
+	otpStatus = ton.GetSettings("jsonrpcOTP")
+	if otpStatus:
+		return "OTP already configured"
+	else:
+		secretKey = pyotp.random_base32()
+		ton.SetSettings("jsonrpcOTPSecret", secretKey)
+		QRcode = pyotp.totp.TOTP(secretKey).provisioning_uri(name='TonAdmin.org')
+		return [QRcode, secretKey]
+#end define
+
+@dispatcher.add_method
+def VerifyOTP(code):
+	global ip
+	ip.CheckAccess()
+	otpStatus = ton.GetSettings("jsonrpcOTP")
+	if otpStatus:
+		return "OTP already configured"
+	else:
+		OTPSecret = ton.GetSettings("jsonrpcOTPSecret")
+		totp = pyotp.TOTP(OTPSecret)
+		print("Current OTP:", totp.now())
+		if totp.now() == code:
+			ton.SetSettings("jsonrpcOTP", True)
+			return True
+		else:
+			return False
+#end define
+
 def GetPort():
 	port = ton.GetSettings("jsonrpcPort")
 	if port is None:
@@ -450,6 +515,10 @@ def SetWebPassword():
 		return
 	passwdHash = generate_password_hash(passwd)
 	ton.SetSettings("passwdHash", passwdHash)
+
+	runArgs = ["bash", "/usr/src/mtc-jsonrpc/setupProxy.sh", str(allowedIP), str(port)]
+	exitCode = RunAsRoot(runArgs)
+
 	print("Configuration complete.")
 	print("Now you can go to https://tonadmin.org")
 	print("and use the following data:")
@@ -457,6 +526,7 @@ def SetWebPassword():
 	print("Validator URL:", url)
 	print("--------------------------------------")
 #end define
+
 
 def Init():
 	# Event reaction
@@ -476,17 +546,9 @@ def Init():
 		port = int(sys.argv[2])
 	#end if
 
-	#ip = requests.get("https://ifconfig.me").text
-	ip = "0.0.0.0"
+	hostip = "127.0.0.1"
 
-	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
-	crtPath = sslKeyPath + ".crt"
-	keyPath = sslKeyPath + ".key"
-	if os.path.isfile(keyPath) == False:
-		make_ssl_devcert(sslKeyPath, host=ip)
-	#end if
-
-	run_simple(ip, port, application, ssl_context=(crtPath, keyPath))
+	run_simple(hostip, port-1, application)
 #end define
 
 
