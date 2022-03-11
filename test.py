@@ -3,7 +3,7 @@ import json
 import os
 
 
-url = "https://185.86.77.139:42420/"
+url = "https://185.86.77.139:21250/"
 token = None
 
 def Get(method, params=None):
@@ -13,6 +13,7 @@ def Get(method, params=None):
 	if token is not None:
 		headers = {"Authorization": "token " + token}
 	response = requests.post(url, json=payload, headers=headers, verify=False) # verify='/path/to/public_key.pem'
+	print("response:", response)
 	data = response.json()
 	result = data.get("result")
 	error = data.get("error")
