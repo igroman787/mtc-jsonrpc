@@ -141,7 +141,7 @@ def login(api, passwd, code = None):
 			raise JSONRPCDispatchException(403, "Wrong 2fa code")
 	return {"api": api, "token": ip.token}
 #end define
- 
+
 @dispatcher.add_method
 def logout():
 	global ip
@@ -515,6 +515,11 @@ def SetWebPassword():
 		return
 	passwdHash = generate_password_hash(passwd)
 	ton.SetSettings("passwdHash", passwdHash)
+
+	scraper = cloudscraper.create_scraper()
+	r = scraper.get("https://tonadmin.org/ip.json").text
+	data_json = json.loads(r)
+	allowedIP = data_json[0]
 
 	runArgs = ["bash", "/usr/src/mtc-jsonrpc/setupProxy.sh", str(allowedIP), str(port)]
 	exitCode = RunAsRoot(runArgs)
