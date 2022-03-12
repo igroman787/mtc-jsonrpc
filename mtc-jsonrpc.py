@@ -521,7 +521,7 @@ def SetWebPassword():
 	data_json = json.loads(r)
 	allowedIP = data_json[0]
 
-	runArgs = ["bash", "/usr/src/mtc-jsonrpc/setupProxy.sh", str(allowedIP), str(port)]
+	runArgs = ["bash", "/usr/src/mtc-jsonrpc/setupProxy.sh", str(allowedIP), str(port), local.buffer["myWorkDir"]]
 	exitCode = RunAsRoot(runArgs)
 
 	print("Configuration complete.")

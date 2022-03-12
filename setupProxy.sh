@@ -16,6 +16,7 @@ fi
 ip=$1
 port=$2
 localport=$(($port-1))
+workdir=$3
 root="/usr/src/mtc-jsonrpc"
 block="/etc/nginx/sites-available/mtc-jsonrpc"
 
@@ -27,8 +28,8 @@ server {
         listen $port ssl;
         listen [::]:$port ssl;
 
-        ssl_certificate /usr/local/bin/mtc-jsonrpc/ssl.crt;
-        ssl_certificate_key /usr/local/bin/mtc-jsonrpc/ssl.key;
+        ssl_certificate $workdir/ssl.crt;
+        ssl_certificate_key $workdir/ssl.key;
 
         allow $ip;
         deny all;
