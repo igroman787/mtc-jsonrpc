@@ -181,7 +181,7 @@ def status():
 	tpsAvg = ton.GetTpsAvg()
 	loadavg = GetLoadAvg()
 	netLoadAvg = ton.GetNetLoadAvg()
-	adnlAddr = ton.adnlAddr
+	adnlAddr = ton.GetAdnlAddr()
 	mytoncoreStatus = GetServiceStatus("mytoncore")
 	rootWorkchainEnabledTime_int = ton.GetRootWorkchainEnabledTime()
 	validatorsElectedFor = config15["validatorsElectedFor"]
