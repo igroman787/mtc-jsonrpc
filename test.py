@@ -5,7 +5,7 @@ import jsonpickle
 from sys import path
 
 path.append("/usr/src/mytonctrl/")
-#from mytoncore import Block, Trans, Message
+from mytoncore import Block, Trans, Message
 
 
 url = "http://127.0.0.1:21249/"
