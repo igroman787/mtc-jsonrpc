@@ -520,6 +520,10 @@ def SetWebPassword():
 	r = scraper.get("https://tonadmin.org/ip.json").text
 	data_json = json.loads(r)
 	allowedIP = data_json[0]
+	
+	if os.path.isfile(keyPath) == False:
+		make_ssl_devcert(sslKeyPath, host=ip)
+	#end if
 
 	runArgs = ["bash", "/usr/src/mtc-jsonrpc/setupProxy.sh", str(allowedIP), str(port), local.buffer["myWorkDir"]]
 	exitCode = RunAsRoot(runArgs)
@@ -552,6 +556,10 @@ def Init():
 	#end if
 
 	hostip = "127.0.0.1"
+
+	if os.path.isfile(keyPath) == False:
+		make_ssl_devcert(sslKeyPath, host=ip)
+	#end if
 
 	run_simple(hostip, port-1, application)
 #end define
