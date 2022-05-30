@@ -520,7 +520,12 @@ def SetWebPassword():
 	r = scraper.get("https://tonadmin.org/ip.json").text
 	data_json = json.loads(r)
 	allowedIP = data_json[0]
-	
+
+	ip = "0.0.0.0"
+	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
+	crtPath = sslKeyPath + ".crt"
+	keyPath = sslKeyPath + ".key"
+
 	if os.path.isfile(keyPath) == False:
 		make_ssl_devcert(sslKeyPath, host=ip)
 	#end if
@@ -557,6 +562,11 @@ def Init():
 
 	hostip = "127.0.0.1"
 
+	ip = "0.0.0.0"
+	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
+	crtPath = sslKeyPath + ".crt"
+	keyPath = sslKeyPath + ".key"
+	
 	if os.path.isfile(keyPath) == False:
 		make_ssl_devcert(sslKeyPath, host=ip)
 	#end if
