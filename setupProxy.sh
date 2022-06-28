@@ -23,7 +23,7 @@ block="/etc/nginx/sites-available/mtc-jsonrpc"
 [ -f block ] && rm block
 
 # Create the Nginx server block file:
-sudo tee $block > /dev/null <<EOF
+tee $block > /dev/null <<EOF
 server {
         listen $port ssl;
         listen [::]:$port ssl;
@@ -31,6 +31,7 @@ server {
         ssl_certificate $workdir/ssl.crt;
         ssl_certificate_key $workdir/ssl.key;
 
+		allow 127.0.0.1;
         allow $ip;
         deny all;
         server_name 0.0.0.0;
@@ -51,7 +52,7 @@ server {
 EOF
 
 # Link to make it available
-[ ! -L "/etc/nginx/sites-enabled/mtc-jsonrpc" ] && sudo ln -s $block /etc/nginx/sites-enabled/
+[ ! -L "/etc/nginx/sites-enabled/mtc-jsonrpc" ] && ln -s $block /etc/nginx/sites-enabled/
 
 # Test configuration and reload if successful
-sudo nginx -t && sudo service nginx restart
+nginx -t && service nginx restart

@@ -3,7 +3,7 @@ import json
 import os
 
 
-url = "https://185.86.77.139:21250/"
+url = "https://127.0.0.1:54358/"
 token = None
 
 def Get(method, params=None):
@@ -18,6 +18,7 @@ def Get(method, params=None):
 	result = data.get("result")
 	error = data.get("error")
 	if error:
+		print(f"error: {error}")
 		text = error.get("data").get("message")
 		raise Exception(text)
 	return result

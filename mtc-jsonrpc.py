@@ -204,12 +204,12 @@ def status():
 	startWorkTime = ton.GetActiveElectionId(fullElectorAddr)
 	validatorIndex = ton.GetValidatorIndex()
 	validatorEfficiency = ton.GetValidatorEfficiency()
-	validatorWallet = ton.GetLocalWallet(ton.validatorWalletName)
+	validatorWallet = ton.GetLocalWallet(ton.GetSettings("validatorWalletName"))
 
 	offersNumber = ton.GetOffersNumber()
 	complaintsNumber = ton.GetComplaintsNumber()
 	if validatorWallet is not None:
-		validatorAccount = ton.GetAccount(validatorWallet.addr)
+		validatorAccount = ton.GetAccount(validatorWallet.addrB64)
 	else:
 		validatorAccount = None
 	#end if
@@ -239,7 +239,7 @@ def status():
 	data["validatorEfficiency"] = validatorEfficiency
 	data["adnlAddr"] = adnlAddr
 	if validatorWallet is not None:
-		data["validatorWalletAddr"] = validatorWallet.addr
+		data["validatorWalletAddr"] = validatorWallet.addrB64
 		data["validatorWalletBalance"] = validatorAccount.balance
 	data["loadavg"] = loadavg
 	data["netLoadAvg"] = netLoadAvg
@@ -321,10 +321,10 @@ def wl():
 	data = dict()
 	wallets = ton.GetWallets()
 	for wallet in wallets:
-		account = ton.GetAccount(wallet.addr)
+		account = ton.GetAccount(wallet.addrB64)
 		buff = dict()
 		buff["name"] = wallet.name
-		buff["addr"] = wallet.addr
+		buff["addr"] = wallet.addrB64
 		buff["workchain"] = wallet.workchain
 		buff["status"] = account.status
 		buff["balance"] = account.balance
@@ -369,8 +369,7 @@ def el():
 def ve():
 	global ip
 	ip.CheckAccess()
-	ton.ReturnStake()
-	ton.ElectionEntry()
+	Elections(ton)
 	return True
 #end define
 
