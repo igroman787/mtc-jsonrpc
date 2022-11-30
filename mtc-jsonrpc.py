@@ -7,6 +7,7 @@ import secrets
 import getpass
 import psutil
 import json
+import jsonpickle
 import cloudscraper
 import pyotp
 from sys import path
@@ -15,6 +16,7 @@ from werkzeug.datastructures import Headers
 from werkzeug.serving import run_simple, make_ssl_devcert
 from werkzeug.security import check_password_hash, generate_password_hash
 from jsonrpc import JSONRPCResponseManager, dispatcher
+from jsonrpc.jsonrpc import JSONRPCRequest
 from jsonrpc.exceptions import JSONRPCDispatchException
 
 path.append("/usr/src/mytonctrl/")
@@ -99,18 +101,14 @@ def application(request):
 	token = GetUserToken(request)
 	ip = GetIp(request.remote_addr, token)
 
-	if ip.GetAllowedIP() == request.headers['X-Real-Ip']:
-		rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
-		data = rpc.json
-	else:
-		scraper = cloudscraper.create_scraper()
-		r = scraper.get("https://tonadmin.org/ip.json").text
-		data_json = json.loads(r)
-		if data_json[0] != ip.GetAllowedIP():
-			ip.SetAllowedIP()
-		data = {"error": {"code": 403, "message": "Forbidden"}, "id": 0, "jsonrpc": "2.0"}
-		data = json.dumps(data)
-	#end if
+	# rpc = JSONRPCResponseManager.handle(request.data, dispatcher)
+	request_str = request.data.decode("utf-8")
+	data = jsonpickle.decode(request_str)
+	request = JSONRPCRequest.from_data(data)
+	rpc = JSONRPCResponseManager.handle_request(request, dispatcher)
+
+	# data = rpc.json
+	data = jsonpickle.encode(rpc.data)
 
 	headers = Headers()
 	headers.add("Access-Control-Allow-Origin", 'https://tonadmin.org')
@@ -310,6 +308,9 @@ def aw(walletName):
 	global ip
 	ip.CheckAccess()
 	wallet = ton.GetLocalWallet(walletName)
+	if not os.path.isfile(wallet.bocFilePath):
+		#raise JSONRPCDispatchException(208, f"Wallet {walletName} already activated")
+		return False
 	ton.ActivateWallet(wallet)
 	return True
 #end define
@@ -395,6 +396,30 @@ def get(name):
 	ip.CheckAccess()
 	result = ton.GetSettings(name)
 	return result
+#end define
+
+@dispatcher.add_method
+def GetLastBlock():
+	block = ton.GetLastBlock()
+	return block
+#end define
+
+@dispatcher.add_method
+def GetShards(block):
+	shards = ton.GetShards(block)
+	return shards
+#end define
+
+@dispatcher.add_method
+def GetTransactions(block):
+	transactions = ton.GetTransactions(block)
+	return transactions
+#end define
+
+@dispatcher.add_method
+def GetTrans(trans):
+	messages = ton.GetTrans(trans)
+	return messages
 #end define
 
 

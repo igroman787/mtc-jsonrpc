@@ -1,7 +1,11 @@
 import requests
 import json
 import os
+import jsonpickle
+from sys import path
 
+path.append("/usr/src/mytonctrl/")
+from mytoncore import Block, Trans, Message
 
 url = "https://127.0.0.1:54358/"
 token = None
@@ -9,12 +13,15 @@ token = None
 def Get(method, params=None):
 	global token
 	payload = {"method": method, "params": params, "jsonrpc": "2.0", "id": 0}
+	payload = json.loads(jsonpickle.encode(payload))
+	#print(f"payload: {type(payload)}, {payload}")
 	headers = None
 	if token is not None:
 		headers = {"Authorization": "token " + token}
 	response = requests.post(url, json=payload, headers=headers, verify=False) # verify='/path/to/public_key.pem'
-	print("response:", response)
-	data = response.json()
+	#print(f"response: {type(response.text)}, {response.text}")
+	#data = response.json()
+	data = jsonpickle.decode(response.text)
 	result = data.get("result")
 	error = data.get("error")
 	if error:
@@ -56,11 +63,11 @@ print("wl", json.dumps(data, indent=4))
 # data = Get("dw", ["wallet_001"])
 # print(json.dumps(data, indent=4))
 
-data = Get("vas", ["Ef_dJMSh8riPi3BTUTtcxsWjG8RLKnLctNjAM4rw8NN-xWdr"])
+data = Get("vas", ["kf8sQcwWuhwBFrnOTyFPRPTlxrDdlV7rX7DAOTUSyAU9FVx5"])
 print("vas", json.dumps(data, indent=4))
 
-data = Get("vah", ["Ef_dJMSh8riPi3BTUTtcxsWjG8RLKnLctNjAM4rw8NN-xWdr", 100])
-print("vah", json.dumps(data, indent=4))
+data = Get("vah", ["kf8sQcwWuhwBFrnOTyFPRPTlxrDdlV7rX7DAOTUSyAU9FVx5", 100])
+print("vah", data)
 
 data = Get("ol")
 print("ol", json.dumps(data, indent=4))
@@ -71,17 +78,29 @@ print("ol", json.dumps(data, indent=4))
 data = Get("el")
 print("el", json.dumps(data, indent=4))
 
-data = Get("ve")
-print("ve", json.dumps(data, indent=4))
+#data = Get("ve")
+#print("ve", json.dumps(data, indent=4))
 
 data = Get("vl")
 print("vl", json.dumps(data, indent=4))
 
 data = Get("cl")
-print("cl", json.dumps(data, indent=4))
+print("cl", data)
 
 # data = Get("vc", [12345678, 1321346545498416587651687435438748645348])
 # print("vc", json.dumps(data, indent=4))
+
+block = Get("GetLastBlock")
+print("GetLastBlock:", block)
+
+shards = Get("GetShards", [block])
+print("GetShards:", shards)
+
+trans = Get("GetTransactions", [block])
+print("GetTransactions:", trans)
+
+messages = Get("GetTrans", [trans[0]])
+print("GetTrans:", messages)
 
 data = Get("CheckUpdates")
 print("CheckUpdates", json.dumps(data, indent=4))

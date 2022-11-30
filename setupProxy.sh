@@ -31,7 +31,7 @@ server {
         ssl_certificate $workdir/ssl.crt;
         ssl_certificate_key $workdir/ssl.key;
 
-		allow 127.0.0.1;
+        allow 127.0.0.1;
         allow $ip;
         deny all;
         server_name 0.0.0.0;
