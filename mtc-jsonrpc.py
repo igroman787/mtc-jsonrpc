@@ -204,7 +204,7 @@ def status():
 	startWorkTime = ton.GetActiveElectionId(fullElectorAddr)
 	validatorIndex = ton.GetValidatorIndex()
 	validatorEfficiency = ton.GetValidatorEfficiency()
-	validatorWallet = ton.GetLocalWallet(ton.GetSettings("validatorWalletName"))
+	validatorWallet = ton.GetValidatorWallet()
 
 	offersNumber = ton.GetOffersNumber()
 	complaintsNumber = ton.GetComplaintsNumber()
@@ -565,7 +565,7 @@ def Init():
 	sslKeyPath = local.buffer["myWorkDir"] + "ssl"
 	crtPath = sslKeyPath + ".crt"
 	keyPath = sslKeyPath + ".key"
-	
+
 	if os.path.isfile(keyPath) == False:
 		make_ssl_devcert(sslKeyPath, host=ip)
 	#end if
